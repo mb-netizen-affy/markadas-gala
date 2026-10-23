@@ -96,6 +96,14 @@ export default function AdminGala() {
   if (!session) return <Connexion />;
 
   const ouvert = formulaireOuvert(reglages);
+  const dateLimite = reglages?.date_limite ? new Date(reglages.date_limite) : null;
+  const detailEtat = ouvert
+    ? dateLimite
+      ? `jusqu'au ${dateLimite.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} à ${dateLimite.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`
+      : "sans date limite"
+    : reglages?.formulaire_ouvert && dateLimite
+      ? "date limite dépassée"
+      : "les familles ne peuvent pas s'inscrire";
   const centre = CENTRES.find((c) => c.slug === slugCentre) ?? CENTRES[0];
   const coursC = coursDuCentre(cours, centre);
   const inscritsC = inscriptionsDuCentre(inscriptions, cours, centre);
@@ -127,6 +135,31 @@ export default function AdminGala() {
             <p className="mk-titre truncate leading-tight" title={titreGala}>{titreGala}</p>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-mk-gris">Administration</p>
           </div>
+        </div>
+
+        {/* État des formulaires : bien visible, cliquable pour aller l'ouvrir / fermer */}
+        <div className="border-b border-mk-ligne p-3">
+          <button
+            onClick={() => setOnglet("reglages")}
+            title="Ouvrir / fermer les formulaires dans Réglages"
+            className={`w-full rounded-lg px-3 py-3 text-left text-white shadow-lg transition hover:brightness-110 ${
+              ouvert ? "bg-ok shadow-ok/20" : "bg-red-600 shadow-red-600/20"
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              {ouvert ? (
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+                </span>
+              ) : (
+                <span className="text-base leading-none">🔒</span>
+              )}
+              <span className="text-[11px] font-bold uppercase tracking-widest opacity-90">Inscriptions</span>
+            </span>
+            <span className="mt-0.5 block text-xl font-extrabold uppercase tracking-wide">{ouvert ? "Ouvertes" : "Fermées"}</span>
+            <span className="block text-xs opacity-90">{detailEtat}</span>
+          </button>
         </div>
 
         {/* Centre affiché */}
@@ -170,16 +203,6 @@ export default function AdminGala() {
         </nav>
 
         <div className="space-y-2 border-t border-mk-ligne p-3">
-          <button
-            onClick={() => setOnglet("reglages")}
-            className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-bold uppercase ${
-              ouvert ? "bg-ok/15 text-ok" : "bg-red-500/15 text-red-300"
-            }`}
-            title="Ouvrir / fermer dans Réglages"
-          >
-            <span>Formulaires</span>
-            <span>{ouvert ? "● Ouverts" : "● Fermés"}</span>
-          </button>
           <button onClick={() => supabase.auth.signOut()} className="mk-btn mk-btn-contour w-full py-1.5 text-xs">
             Déconnexion
           </button>
@@ -188,11 +211,20 @@ export default function AdminGala() {
 
       {/* ───── Contenu ───── */}
       <main className="min-w-0 flex-1">
-        <header className="sticky top-0 z-10 border-b border-mk-ligne bg-mk-fond/90 px-8 py-4 backdrop-blur">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-mk-ligne bg-mk-fond/90 px-8 py-4 backdrop-blur">
           <h1 className="mk-titre text-2xl">
             {actif.label}
             {actif.centre && <span className="text-mk-rouge"> · {centre.nom}</span>}
           </h1>
+          <button
+            onClick={() => setOnglet("reglages")}
+            title="Ouvrir / fermer les formulaires dans Réglages"
+            className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-extrabold uppercase tracking-wide text-white ${
+              ouvert ? "bg-ok" : "bg-red-600"
+            }`}
+          >
+            {ouvert ? "● Inscriptions ouvertes" : "🔒 Inscriptions fermées"}
+          </button>
         </header>
         <div className="space-y-4 px-8 py-6">
           {erreur && <p className="mk-carte text-red-300">Erreur : {erreur}</p>}

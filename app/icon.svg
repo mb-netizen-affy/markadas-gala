@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Le « M » de Markadas rouge Markadas, sur fond noir (lisible sur les onglets clairs et sombres) -->
+  <rect width="64" height="64" rx="14" fill="#121417"/>
+  <g transform="translate(5 5) scale(0.2647)" fill="none" stroke="#e53935" stroke-linecap="round">
+    <g transform="translate(-14 -11)">
+      <path d="M38.5 170 L82.3 55.8" stroke-width="44.8"/>
+      <path d="M93 59.8 L124.4 132.8" stroke-width="28"/>
+      <path d="M148.7 56.2 L193 169.8" stroke-width="45"/>
+    </g>
+  </g>
+</svg>

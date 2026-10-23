@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* ───────── Charte « Gala d'hiver » : nuit bleutée, bleu givré, blanc neige ─────────
+   La couleur d'accent garde le nom "mk-rouge" pour ne pas toucher à tous les fichiers,
+   mais c'est désormais un bleu givré. */
+@theme {
+  --color-mk-rouge: #9fd8f5;        /* bleu givré (couleur d'accent) */
+  --color-mk-rouge-fonce: #7cc6ee;  /* survol des boutons */
+  --color-mk-noir: #0d131a;         /* en-tête et champs de saisie */
+  --color-mk-fond: #131b24;         /* fond des pages (nuit d'hiver) */
+  --color-mk-carte: #1b2531;        /* cartes */
+  --color-mk-carte2: #253241;       /* boutons et cases non cochées */
+  --color-mk-ligne: #33424f;        /* bordures */
+  --color-mk-gris: #aebccb;         /* textes secondaires */
+  --color-mk-texte: #eef5fb;        /* texte principal (blanc neige) */
+
+  /* Médailles et statuts */
+  --color-or: #f2c94c;
+  --color-argent: #cfd5dd;
+  --color-bronze: #d9965b;
+  --color-ok: #3fae6a;
+
+  --font-sans: var(--font-open-sans), system-ui, sans-serif;
+}
+
+html {
+  color-scheme: dark;
+  --mk-halo: #1f3044;               /* halo en haut de page (hiver) */
+}
+
+/* Tant que la saison n'est pas connue (toute première visite) : fond neutre,
+   ni bleu ni jaune, pour ne pas changer de couleur une fois la page chargée */
+html:not([data-saison]) {
+  --color-mk-fond: #17181b;
+  --mk-halo: #202226;
+}
+
+/* ───────── Saison « Été » : jaune pâle à la place du bleu givré ─────────
+   Activée par le switch Hiver/Été dans Réglages (attribut data-saison sur <html>) */
+html[data-saison="ete"] {
+  --color-mk-rouge: #f6e3a1;        /* jaune pâle (couleur d'accent) */
+  --color-mk-rouge-fonce: #eed585;
+  --color-mk-noir: #15130e;
+  --color-mk-fond: #1c1913;
+  --color-mk-carte: #26221a;
+  --color-mk-carte2: #332d22;
+  --color-mk-ligne: #463e2f;
+  --color-mk-gris: #c7bea9;
+  --color-mk-texte: #fbf7ec;
+  --mk-halo: #3b311c;
+}
+
+/* Listes déroulantes : sous Windows, la liste ouverte reprend le fond de la case
+   (transparent dans les tableaux) → texte clair sur fond blanc. On force les couleurs. */
+select option,
+select optgroup {
+  background-color: var(--color-mk-noir);
+  color: var(--color-mk-texte);
+}
+
+body {
+  /* léger halo glacé en haut de page */
+  background: radial-gradient(ellipse 120% 60% at 50% 0%, var(--mk-halo) 0%, var(--color-mk-fond) 70%) fixed;
+  background-color: var(--color-mk-fond);
+  color: var(--color-mk-texte);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ───────── Briques réutilisables ───────── */
+@layer components {
+  .mk-carte {
+    @apply rounded-lg border border-mk-ligne bg-mk-carte p-4;
+  }
+  .mk-titre {
+    @apply font-extrabold uppercase tracking-wide;
+  }
+
+  /* Boutons : combiner "mk-btn" + une couleur */
+  .mk-btn {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-bold uppercase tracking-wide transition active:scale-[0.97] disabled:opacity-40;
+  }
+  .mk-btn-rouge {
+    @apply bg-mk-rouge text-mk-noir hover:bg-mk-rouge-fonce;
+  }
+  .mk-btn-sombre {
+    @apply bg-mk-carte2 text-white hover:bg-mk-ligne;
+  }
+  .mk-btn-contour {
+    @apply border border-white/40 text-white hover:border-white;
+  }
+
+  .mk-input {
+    @apply w-full rounded-md border border-mk-ligne bg-mk-noir px-3 py-2 text-white placeholder:text-mk-gris focus:border-mk-rouge focus:outline-none;
+  }
+
+  /* Onglets : combiner "mk-onglet" (+ "mk-onglet-actif") */
+  .mk-onglet {
+    @apply rounded-md bg-mk-carte2 py-2 text-sm font-bold uppercase tracking-wide text-mk-gris transition;
+  }
+  .mk-onglet-actif {
+    @apply bg-mk-rouge text-mk-noir;
+  }
+
+  /* lueur autour du gros logo des formulaires (suit la couleur de la saison) */
+  .mk-halo-logo {
+    filter: drop-shadow(0 0 24px color-mix(in srgb, var(--color-mk-rouge) 35%, transparent));
+  }
+
+  .mk-lien {
+    @apply text-mk-rouge hover:underline;
+  }
+}

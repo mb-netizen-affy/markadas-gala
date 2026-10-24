@@ -76,7 +76,8 @@ export default function ReglagesGala({
       `Réinitialiser pour un nouveau gala ?\n\n` +
         `• Les ${nbInscrits} inscriptions seront SUPPRIMÉES (Bron et Saint-Priest)\n` +
         `• Les ordres de passage seront effacés\n` +
-        `• Les cours redeviennent ceux des plannings, chacun avec son prof et ses galas\n` +
+        `• Les cours redeviennent ceux des plannings, chacun avec son prof\n` +
+        `• Les galas des cours sont vidés (répartition à refaire)\n` +
         `• Les cours ajoutés à la main sont supprimés\n\n` +
         `Pense à faire un Export Excel avant !\n\nTape SUPPRIMER pour confirmer :`
     );
@@ -208,7 +209,8 @@ export default function ReglagesGala({
           <p className="mk-titre text-lg text-red-300">Nouveau gala</p>
           <ul className="list-disc space-y-0.5 pl-5 text-sm text-mk-gris">
             <li>Supprime les <b className="text-mk-texte">{nbInscrits} danseurs inscrits</b> et les ordres de passage.</li>
-            <li>Remet les cours comme sur les plannings, <b className="text-mk-texte">chacun avec son prof et ses galas</b>.</li>
+            <li>Remet les cours comme sur les plannings, <b className="text-mk-texte">chacun avec son prof</b>.</li>
+            <li>Vide les galas des cours : la répartition est à refaire.</li>
             <li>Supprime les cours ajoutés à la main.</li>
             <li>Garde les profs, le nombre de galas, le titre et la saison.</li>
           </ul>

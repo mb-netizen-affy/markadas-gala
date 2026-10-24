@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase, trierCours, appliquerSaison, grouperParEcole } from "@/lib/supabase";
 import Entete, { Etat } from "@/components/Entete";
+import Icone from "@/components/Icone";
 
 type CoursProf = {
   id: string; jour: string; nom: string; horaire: string; lieu: string;
@@ -35,7 +36,7 @@ export default function VueProf({ code }: { code: string }) {
         sousTitre={`${donnees.prof} · ${cours.length} cours · ${total} inscription${total > 1 ? "s" : ""}`}
         droite={
           <button onClick={() => window.print()} className="mk-btn mk-btn-contour shrink-0 px-3 py-1.5 text-xs print:hidden">
-            🖨 Imprimer
+            <Icone nom="imprimer" /> Imprimer
           </button>
         }
       />
@@ -43,7 +44,7 @@ export default function VueProf({ code }: { code: string }) {
         {grouperParEcole(cours).map((g) => (
           <div key={g.lieu} className="space-y-3">
             <h2 className="flex items-baseline gap-3 border-b-2 border-mk-rouge pb-1 break-after-avoid">
-              <span className="mk-titre text-2xl text-mk-rouge">{g.lieu === "Commun" ? "Commun aux 2 écoles" : g.lieu}</span>
+              <span className="mk-titre text-2xl">{g.lieu === "Commun" ? "Commun aux 2 écoles" : g.lieu}</span>
               <span className="text-sm text-mk-gris">
                 {g.cours.length} cours · {g.cours.reduce((a, c) => a + c.danseurs.length, 0)} inscription(s)
               </span>
@@ -52,7 +53,7 @@ export default function VueProf({ code }: { code: string }) {
           <section key={c.id} className="mk-carte space-y-2 break-inside-avoid">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="mk-titre text-lg">
-                <span className="text-mk-rouge">{c.jour}</span> · {c.nom}
+                <span className="text-mk-gris">{c.jour}</span> · {c.nom}
               </h2>
               <span className="text-sm font-bold text-mk-gris">
                 {c.horaire && `${c.horaire} · `}{c.danseurs.length} inscrit{c.danseurs.length > 1 ? "s" : ""}

@@ -7,7 +7,9 @@
 import { normaliser } from "./texte";
 import type { Cours, Inscription } from "./supabase";
 
-export type Ligne = { t: "danse"; id: string } | { t: "entracte" };
+// Une ligne du déroulé : une danse (un cours), l'entracte, ou un numéro hors cours
+// (chanteuse, solo, présentation des profs…) qui n'a pas de danseurs inscrits.
+export type Ligne = { t: "danse"; id: string } | { t: "entracte" } | { t: "libre"; id: string; nom: string };
 export type OrdrePassage = { ecart: number; teamShow: string | null; liste: Ligne[] };
 
 export const ECART_DEFAUT = 2;
@@ -148,4 +150,65 @@ export function ajouterALaFin(liste: Ligne[], ids: string[], teamShow: string | 
   if (teamShow && dernier?.t === "danse" && dernier.id === teamShow)
     return [...liste.slice(0, -1), ...nouvelles, dernier];
   return [...liste, ...nouvelles];
+}
+
+// ───── Répartition des cours entre plusieurs galas (galas équilibrés) ─────
+// On place chaque cours dans le gala qui a le moins de danses (à égalité : le moins de danseurs).
+// Les plus gros cours sont placés en premier pour que l'équilibre soit meilleur.
+// tout = false : on ne place que les cours qui n'ont pas encore de gala.
+// Renvoie, pour chaque cours placé, son nouveau gala.
+export function repartirGalas(
+  cours: { id: string; galas: number[] }[],
+  nb: number,
+  danseurs: Danseurs,
+  tout: boolean
+): Map<string, number[]> {
+  const nbDanses = Array(nb + 1).fill(0);
+  const nbDanseurs = Array(nb + 1).fill(0);
+  const taille = (id: string) => danseurs.get(id)?.size ?? 0;
+  const valides = (c: { galas: number[] }) => (c.galas ?? []).filter((g) => g >= 1 && g <= nb);
+
+  const aPlacer = tout ? cours : cours.filter((c) => !valides(c).length);
+  if (!tout)
+    for (const c of cours)
+      for (const g of valides(c)) {
+        nbDanses[g]++;
+        nbDanseurs[g] += taille(c.id);
+      }
+
+  const res = new Map<string, number[]>();
+  for (const c of [...aPlacer].sort((a, b) => taille(b.id) - taille(a.id))) {
+    let meilleur = 1;
+    for (let g = 2; g <= nb; g++)
+      if (nbDanses[g] < nbDanses[meilleur] || (nbDanses[g] === nbDanses[meilleur] && nbDanseurs[g] < nbDanseurs[meilleur]))
+        meilleur = g;
+    nbDanses[meilleur]++;
+    nbDanseurs[meilleur] += taille(c.id);
+    res.set(c.id, [meilleur]);
+  }
+  return res;
+}
+
+// Après une régénération, on remet les numéros hors cours à peu près à leur place
+export function reinsererLibres(nouvelle: Ligne[], ancienne: Ligne[]): Ligne[] {
+  const res = [...nouvelle];
+  ancienne.forEach((l, i) => {
+    if (l.t === "libre") res.splice(Math.max(1, Math.min(i, res.length - 1)), 0, l);
+  });
+  return res;
+}
+
+// Glisser-déposer : on déplace une ligne vers la place d'une autre. La Team Show et l'entracte
+// ne bougent pas : seules les lignes « mobiles » changent de place entre elles.
+export function deplacerVers(liste: Ligne[], depuis: number, vers: number, estFixe: (l: Ligne) => boolean): Ligne[] {
+  const places = liste.map((l, i) => (estFixe(l) ? -1 : i)).filter((i) => i >= 0);
+  const a = places.indexOf(depuis);
+  const b = places.indexOf(vers);
+  if (a === -1 || b === -1 || a === b) return liste;
+  const mobiles = places.map((i) => liste[i]);
+  const [ligne] = mobiles.splice(a, 1);
+  mobiles.splice(b, 0, ligne);
+  const res = [...liste];
+  places.forEach((i, k) => (res[i] = mobiles[k]));
+  return res;
 }

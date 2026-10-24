@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase, JOURS, LIEUX, type Cours, type Inscription, type Prof } from "@/lib/supabase";
+import { supabase, JOURS, LIEUX, galasDuCours, type Centre, type Cours, type Inscription, type Prof } from "@/lib/supabase";
+import { estTeamShow } from "@/lib/ordre";
+import NbGalas from "@/components/admin/NbGalas";
+import Icone from "@/components/Icone";
 
 const champ =
   "rounded-md border border-mk-ligne bg-mk-noir px-2 py-1.5 text-sm text-mk-texte focus:border-mk-rouge focus:outline-none";
@@ -51,18 +54,38 @@ function ChoixProf({
 }
 
 export default function GestionCours({
-  cours, profs, inscriptions, lieuParDefaut, onChange,
+  cours, profs, inscriptions, centre, nbGalas, onChange,
 }: {
   cours: Cours[];
   profs: Prof[];
   inscriptions: Inscription[];
-  lieuParDefaut: string;
+  centre: Centre;
+  nbGalas: number;
   onChange: () => void;
 }) {
+  const lieuParDefaut = centre.nom;
   const [nouveau, setNouveau] = useState({ jour: "Lundi", nom: "", horaire: "", lieu: lieuParDefaut, prof_id: null as string | null });
   const [enCours, setEnCours] = useState(false);
+  // Le bloc « Ajouter un cours » peut être réduit (retenu d'une visite à l'autre)
+  const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  useEffect(() => {
+    try {
+      setAjoutOuvert(localStorage.getItem("mk-ajout-cours") === "1");
+    } catch {}
+  }, []);
+  function basculerAjout(v: boolean) {
+    setAjoutOuvert(v);
+    try {
+      localStorage.setItem("mk-ajout-cours", v ? "1" : "0");
+    } catch {}
+  }
 
   const nbInscrits = (id: string) => inscriptions.filter((i) => i.cours.includes(id)).length;
+
+  // ── Plusieurs galas : la Team Show passe dans tous, les autres cours dans le(s) gala(s) choisi(s) ──
+  const aRepartir = cours.filter((c) => !estTeamShow(c));
+  const sansGala = aRepartir.filter((c) => !galasDuCours(c, nbGalas).length);
+  const parGala = Array.from({ length: nbGalas }, (_, i) => aRepartir.filter((c) => galasDuCours(c, nbGalas).includes(i + 1)).length);
 
   async function ajouter(e: React.FormEvent) {
     e.preventDefault();
@@ -78,7 +101,17 @@ export default function GestionCours({
 
   return (
     <section className="space-y-4">
-      <form onSubmit={ajouter} className="mk-carte space-y-2">
+      <form onSubmit={ajouter} className="mk-carte space-y-2 py-3">
+        <button
+          type="button"
+          onClick={() => basculerAjout(!ajoutOuvert)}
+          className="flex w-full items-center gap-2 text-left"
+        >
+          <span className="mk-titre flex items-center gap-2 text-sm"><Icone nom="plus" /> Ajouter un cours</span>
+          <span className="text-xs text-mk-gris">{ajoutOuvert ? "▴" : "▾"}</span>
+        </button>
+        {ajoutOuvert && (
+        <>
         <div className="flex items-end gap-2">
           <label className="w-32 space-y-1">
             <span className="block text-[10px] font-bold uppercase text-mk-gris">Jour</span>
@@ -117,20 +150,43 @@ export default function GestionCours({
         <p className="text-xs text-mk-gris">
           Le centre décide du formulaire où le cours apparaît : Bron, Saint-Priest, ou « Commun » pour les deux. Le jour « Autres » sert pour ce qui n&apos;est pas un cours de la semaine : Team Show, Crew…
         </p>
+        </>
+        )}
       </form>
 
+      {/* Nombre de galas + nombre de cours par gala */}
+      <div className="mk-carte flex flex-wrap items-center gap-x-6 gap-y-3">
+        <NbGalas centre={centre} nb={nbGalas} onChange={onChange} />
+        {nbGalas > 1 && (
+          <>
+            <div className="flex flex-wrap gap-2 text-sm">
+              {parGala.map((n, i) => (
+                <span key={i} className="rounded-md bg-mk-carte2 px-2.5 py-1">
+                  <b>Gala {i + 1}</b> <span className="text-mk-gris">· {n} cours</span>
+                </span>
+              ))}
+              {sansGala.length > 0 && (
+                <span className="flex items-center gap-1.5 rounded-md bg-amber-500/15 px-2.5 py-1 font-bold text-amber-300"><Icone nom="alerte" /> {sansGala.length} sans gala</span>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+
       {cours.length ? (
-        <div className="overflow-hidden rounded-lg border border-mk-ligne bg-mk-carte">
+        <div className="mk-tableau">
           <table className="w-full text-sm">
             <thead className="bg-mk-carte2 text-left text-[11px] uppercase tracking-wider text-mk-gris">
               <tr>
-                <th className="w-32 px-3 py-2.5">Jour</th>
-                <th className="px-3 py-2.5">Cours</th>
-                <th className="w-24 px-3 py-2.5">Horaire</th>
-                <th className="w-36 px-3 py-2.5">Centre</th>
-                <th className="w-48 px-3 py-2.5">Prof</th>
-                <th className="w-20 px-3 py-2.5 text-center">Inscrits</th>
-                <th className="w-36" />
+                <th className="w-28 min-w-28 px-3 py-2.5">Jour</th>
+                <th className="min-w-48 px-3 py-2.5">Cours</th>
+                <th className="w-20 px-3 py-2.5">Horaire</th>
+                <th className="w-28 min-w-28 px-3 py-2.5">Centre</th>
+                <th className="w-40 min-w-40 px-3 py-2.5">Prof</th>
+                {nbGalas > 1 && <th className="w-32 min-w-32 px-3 py-2.5">Galas</th>}
+                <th className="w-16 px-2 py-2.5 text-center">Inscrits</th>
+                <th className="w-px" />
               </tr>
             </thead>
             {JOURS.map((jour) => {
@@ -138,13 +194,13 @@ export default function GestionCours({
               if (!liste.length) return null;
               return (
                 <tbody key={jour}>
-                  <tr>
-                    <td colSpan={7} className="border-t border-mk-ligne bg-mk-noir/40 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-mk-rouge">
+                  <tr className="mk-separateur">
+                    <td colSpan={nbGalas > 1 ? 8 : 7} className="border-t border-mk-ligne bg-mk-noir/40 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-mk-texte">
                       {jour} <span className="font-semibold text-mk-gris">· {liste.length} cours</span>
                     </td>
                   </tr>
                   {liste.map((c) => (
-                    <LigneCours key={c.id} c={c} profs={profs} nb={nbInscrits(c.id)} onChange={onChange} />
+                    <LigneCours key={c.id} c={c} profs={profs} nb={nbInscrits(c.id)} nbGalas={nbGalas} onChange={onChange} />
                   ))}
                 </tbody>
               );
@@ -158,7 +214,29 @@ export default function GestionCours({
   );
 }
 
-function LigneCours({ c, profs, nb, onChange }: { c: Cours; profs: Prof[]; nb: number; onChange: () => void }) {
+function LigneCours({
+  c, profs, nb, nbGalas, onChange,
+}: {
+  c: Cours;
+  profs: Prof[];
+  nb: number;
+  nbGalas: number;
+  onChange: () => void;
+}) {
+  // Galas affichés tout de suite au clic, puis enregistrés en arrière-plan
+  const [galasLocaux, setGalasLocaux] = useState(c.galas ?? []);
+  useEffect(() => setGalasLocaux(c.galas ?? []), [c.galas]);
+  const galas = galasDuCours({ galas: galasLocaux }, nbGalas);
+  async function basculerGala(g: number) {
+    const avant = galasLocaux;
+    const nouveaux = galas.includes(g) ? galas.filter((x) => x !== g) : [...galas, g].sort();
+    setGalasLocaux(nouveaux);
+    const { error } = await supabase.from("gala_cours").update({ galas: nouveaux }).eq("id", c.id);
+    if (error) {
+      setGalasLocaux(avant);
+      alert("Erreur : " + error.message);
+    } else onChange();
+  }
   const [f, setF] = useState(c);
   useEffect(() => setF(c), [c]);
   const modifie = JSON.stringify(f) !== JSON.stringify(c);
@@ -211,6 +289,28 @@ function LigneCours({ c, profs, nb, onChange }: { c: Cours; profs: Prof[]; nb: n
       <td className={cellule}>
         <ChoixProf className={f.prof_id ? sansFond : "border-transparent bg-transparent text-mk-gris hover:border-mk-ligne"} valeur={f.prof_id} profs={profs} onChange={(id) => setF({ ...f, prof_id: id })} onProfCree={onChange} />
       </td>
+      {nbGalas > 1 && (
+        <td className={cellule}>
+          {estTeamShow(c) ? (
+            <span className="text-xs font-bold text-mk-gris">Tous les galas</span>
+          ) : (
+            <div className={`inline-flex gap-1 rounded-md p-0.5 ${galas.length ? "" : "ring-1 ring-amber-500/70"}`}>
+              {Array.from({ length: nbGalas }, (_, i) => i + 1).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => basculerGala(g)}
+                  title={`Gala ${g}`}
+                  className={`h-7 w-8 rounded text-xs font-extrabold transition ${
+                    galas.includes(g) ? "bg-mk-rouge text-mk-noir" : "bg-mk-noir text-mk-gris hover:text-mk-texte"
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          )}
+        </td>
+      )}
       <td className={`${cellule} text-center font-bold ${nb ? "" : "text-mk-gris"}`}>{nb}</td>
       <td className={`${cellule} text-right`}>
         <div className="flex justify-end gap-1">
@@ -225,7 +325,7 @@ function LigneCours({ c, profs, nb, onChange }: { c: Cours; profs: Prof[]; nb: n
             className="rounded px-2 py-1 text-mk-gris opacity-0 transition hover:bg-red-500/20 hover:text-red-300 group-hover:opacity-100"
             title="Supprimer"
           >
-            ✕
+            <Icone nom="croix" />
           </button>
         </div>
       </td>

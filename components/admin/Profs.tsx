@@ -73,9 +73,9 @@ export default function Profs({
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="mk-titre text-lg">{p.nom}</h3>
               <div className="flex gap-3 text-xs">
-                <button onClick={() => renommer(p)} className="mk-lien">Renommer</button>
-                <button onClick={() => nouveauLien(p)} className="mk-lien">Nouveau lien</button>
-                <button onClick={() => supprimer(p)} className="mk-lien">Supprimer</button>
+                <button onClick={() => renommer(p)} className="text-mk-gris hover:text-mk-texte">Renommer</button>
+                <button onClick={() => nouveauLien(p)} className="text-mk-gris hover:text-mk-texte">Nouveau lien</button>
+                <button onClick={() => supprimer(p)} className="text-mk-gris hover:text-red-300">Supprimer</button>
               </div>
             </div>
             <div className="flex-1 text-sm text-mk-gris">
@@ -83,7 +83,7 @@ export default function Profs({
                 <div className="space-y-2">
                   {grouperParEcole(ses).map((g) => (
                     <div key={g.lieu}>
-                      <p className="text-[11px] font-extrabold uppercase tracking-widest text-mk-rouge">
+                      <p className="text-[11px] font-extrabold uppercase tracking-widest text-mk-gris">
                         {g.lieu} <span className="font-semibold text-mk-gris">· {g.cours.length}</span>
                       </p>
                       <ul>
@@ -105,7 +105,7 @@ export default function Profs({
               )}
             </div>
             <div className="flex items-center gap-2 rounded-md bg-mk-carte2 px-3 py-2 text-sm">
-              <a href={url} target="_blank" className="mk-lien flex-1 truncate">{url}</a>
+              <a href={url} target="_blank" className="flex-1 truncate text-mk-gris hover:text-mk-texte hover:underline">{url}</a>
               <button onClick={() => copier(url)} className="mk-btn mk-btn-rouge shrink-0 px-2 py-1 text-[11px]">
                 {copie === url ? "Copié ✓" : "Copier"}
               </button>

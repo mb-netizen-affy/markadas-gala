@@ -13,8 +13,18 @@ export type Reglages = {
   date_limite: string | null; // ISO
   message_ferme: string;
   saison: Saison;
-  ordre_passage: Record<string, OrdrePassage> | null; // ordre de passage, un par centre (clé = slug)
+  ordre_passage: Record<string, OrdrePassage> | null; // ordres de passage (clé = "bron", "bron-2", "saint-priest-3"…)
+  nb_galas: Record<string, number> | null; // nombre de galas par école (clé = slug), 1 par défaut
 };
+
+// ───── Plusieurs galas par école ─────
+export const NB_GALAS_MAX = 4;
+export const nbGalasDe = (r: Reglages | null, slug: string) =>
+  Math.min(NB_GALAS_MAX, Math.max(1, r?.nb_galas?.[slug] ?? 1));
+// Les galas choisis pour un cours (on ignore ceux au-delà du nombre de galas actuel)
+export const galasDuCours = (c: Pick<Cours, "galas">, nb: number) => (c.galas ?? []).filter((g) => g >= 1 && g <= nb);
+// Clé de l'ordre de passage : le gala 1 garde l'ancienne clé ("bron") pour ne rien perdre
+export const cleOrdre = (slug: string, gala: number) => (gala === 1 ? slug : `${slug}-${gala}`);
 
 // Saison du gala : hiver = bleu givré, été = jaune pâle (voir globals.css)
 export type Saison = "hiver" | "ete";
@@ -39,6 +49,8 @@ export type Cours = {
   lieu: string;
   prof_id: string | null;
   ordre: number;
+  galas: number[]; // galas où le cours passe (1, 2…) ; vide = pas encore choisi
+  ref?: string | null; // code du cours dans la liste de référence des plannings (c001…)
 };
 
 export type Inscription = {
@@ -106,6 +118,30 @@ export function trierCours<T extends Pick<Cours, "jour" | "horaire" | "nom">>(co
     (a, b) => rang(a.jour) - rang(b.jour) || minutes(a.horaire) - minutes(b.horaire) || a.nom.localeCompare(b.nom)
   );
 }
+
+// Catégorie d'un cours, devinée d'après son nom (pour les filtres du formulaire)
+export type Categorie = "enfant" | "ado" | "couple" | "autre";
+export function categorieCours(c: Pick<Cours, "nom" | "lieu" | "jour">): Categorie {
+  const n = c.nom.toLowerCase();
+  if (c.lieu === COMMUN || c.jour === "Autres") return "autre";
+  if (/salsa|bachata|kizomba|boogie|west coast|^rock (d[ée]butant|interm|perfect)/.test(n)) return "couple";
+  if (/ados|adulte/.test(n)) return "ado";
+  if (/kids|\d+\s*-\s*\d+\s*ans|d[èe]s \d+ ans|rock saut|avec les stars/.test(n)) return "enfant";
+  return "ado";
+}
+export const CATEGORIES: { id: Categorie | "tous"; label: string }[] = [
+  { id: "tous", label: "Tous les cours" },
+  { id: "enfant", label: "Enfants" },
+  { id: "ado", label: "Ados / Adultes" },
+  { id: "couple", label: "Danses à deux" },
+];
+
+// Téléphone français : 10 chiffres commençant par 0, ou +33 suivi de 9 chiffres
+export function telephoneValide(t: string) {
+  const c = t.replace(/[^\d+]/g, "");
+  return /^0\d{9}$/.test(c) || /^\+33\d{9}$/.test(c) || /^0033\d{9}$/.test(c);
+}
+export const emailValide = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e.trim());
 
 export const libelleCours = (c: Pick<Cours, "jour" | "nom" | "horaire" | "lieu">) =>
   [c.jour, c.nom, c.horaire, c.lieu].filter(Boolean).join(" · ");

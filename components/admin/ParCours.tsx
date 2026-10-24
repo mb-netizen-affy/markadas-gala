@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { JOURS, type Cours, type Inscription, type Prof } from "@/lib/supabase";
 import { exporterCours, exporterTout, imprimerCours } from "@/lib/export";
+import Icone from "@/components/Icone";
 
 // Les listes par cours, à envoyer aux profs : la liste des cours à gauche,
 // les danseurs du cours sélectionné à droite (Excel, impression)
@@ -32,7 +33,7 @@ export default function ParCours({
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-mk-gris">Choisis un cours pour voir ses danseurs, l&apos;imprimer ou l&apos;exporter pour le prof.</p>
         <button onClick={() => exporterTout(inscritsCentre, cours, profs, titre, inscriptions)} className="mk-btn mk-btn-rouge">
-          Export Excel complet
+          <Icone nom="telecharger" /> Export Excel complet
         </button>
       </div>
 
@@ -44,7 +45,7 @@ export default function ParCours({
             if (!liste.length) return null;
             return (
               <div key={jour}>
-                <p className="bg-mk-carte2 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-mk-rouge">
+                <p className="bg-mk-carte2 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-widest text-mk-texte">
                   {jour}
                 </p>
                 {liste.map((x) => {
@@ -82,7 +83,7 @@ export default function ParCours({
             <div className="mk-carte space-y-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-mk-rouge">{c.jour}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-mk-gris">{c.jour}</p>
                   <h2 className="mk-titre text-2xl">{c.nom}</h2>
                   <p className="text-sm text-mk-gris">
                     {[c.horaire, c.lieu, nomProf(c) && `Prof : ${nomProf(c)}`].filter(Boolean).join(" · ")}
@@ -90,10 +91,10 @@ export default function ParCours({
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <button onClick={() => imprimerCours(c, inscriptions, profs, titre)} className="mk-btn mk-btn-sombre border border-mk-ligne text-xs">
-                    🖨 Imprimer
+                    <Icone nom="imprimer" /> Imprimer
                   </button>
                   <button onClick={() => exporterCours(c, inscriptions, profs)} className="mk-btn mk-btn-rouge text-xs">
-                    Excel
+                    <Icone nom="telecharger" /> Excel
                   </button>
                 </div>
               </div>

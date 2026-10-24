@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Icone from "@/components/Icone";
 
 // Agenda pour choisir la date limite.
 // valeur = "AAAA-MM-JJTHH:MM" (heure locale) ou "" pour aucune date.
@@ -60,7 +61,7 @@ export default function ChoixDate({ valeur, onChange }: { valeur: string; onChan
             ouvert ? "border-mk-rouge" : "border-mk-ligne hover:border-mk-gris"
           }`}
         >
-          <span className="text-xl">📅</span>
+          <Icone nom="calendrier" className="h-5 w-5 text-mk-gris" />
           <span className="min-w-0 flex-1">
             {choisie ? (
               <>
@@ -142,7 +143,7 @@ export default function ChoixDate({ valeur, onChange }: { valeur: string; onChan
                 <option key={m} value={m}>{p2(m)}</option>
               ))}
             </select>
-            <button type="button" disabled={!choisie} onClick={() => choisirHeure(23, 59)} className="mk-lien text-xs">
+            <button type="button" disabled={!choisie} onClick={() => choisirHeure(23, 59)} className="text-xs text-mk-gris underline hover:text-mk-texte">
               fin de journée
             </button>
           </div>

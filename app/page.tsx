@@ -2,16 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase, formulaireOuvert, trierCours, appliquerSaison, CENTRES, COMMUN, coursDuCentre, inscriptionsDuCentre, type Cours, type Inscription, type Prof, type Reglages } from "@/lib/supabase";
+import { supabase, formulaireOuvert, trierCours, appliquerSaison, CENTRES, COMMUN, nbGalasDe, coursDuCentre, inscriptionsDuCentre, type Cours, type Inscription, type Prof, type Reglages } from "@/lib/supabase";
 import { Etat } from "@/components/Entete";
 import LogoMarkadas from "@/components/LogoMarkadas";
+import Icone from "@/components/Icone";
 import Connexion from "@/components/admin/Connexion";
 import ReglagesGala from "@/components/admin/ReglagesGala";
 import GestionCours from "@/components/admin/GestionCours";
 import Profs from "@/components/admin/Profs";
 import Inscriptions from "@/components/admin/Inscriptions";
 import ParCours from "@/components/admin/ParCours";
-import OrdrePassage from "@/components/admin/OrdrePassage";
+import OngletOrdre from "@/components/admin/OngletOrdre";
 
 type Onglet = "inscriptions" | "parcours" | "cours" | "ordre" | "profs" | "reglages";
 
@@ -69,6 +70,22 @@ export default function AdminGala() {
     return () => data.subscription.unsubscribe();
   }, []);
 
+  // Rechargement léger (réglages, cours, profs) : après une modif de cours, de prof, de gala…
+  // C'est rapide : on ne recharge pas les milliers d'inscriptions.
+  const chargerLeger = useCallback(async () => {
+    const [r, c, p] = await Promise.all([
+      supabase.from("gala_reglages").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("gala_cours").select("*"),
+      supabase.from("gala_profs").select("*").order("nom"),
+    ]);
+    if (r.error || c.error || p.error) return setErreur((r.error || c.error || p.error)!.message);
+    setReglages(r.data);
+    appliquerSaison(r.data?.saison);
+    setCours(trierCours(c.data ?? []));
+    setProfs(p.data ?? []);
+  }, []);
+
+  // Rechargement complet (avec les inscriptions)
   const charger = useCallback(async () => {
     try {
       const [r, c, p, i] = await Promise.all([
@@ -116,12 +133,12 @@ export default function AdminGala() {
   });
 
   const onglets: { id: Onglet; label: string; icone: string; info?: number; centre: boolean }[] = [
-    { id: "inscriptions", label: "Inscrits", icone: "👥", info: inscritsC.length, centre: true },
-    { id: "parcours", label: "Inscrits par cours", icone: "📋", centre: true },
-    { id: "cours", label: "Cours", icone: "🩰", info: coursC.length, centre: true },
-    { id: "ordre", label: "Ordre de passage", icone: "🎬", centre: true },
-    { id: "profs", label: "Profs", icone: "🎓", info: profsC.length, centre: true },
-    { id: "reglages", label: "Réglages", icone: "⚙️", centre: false },
+    { id: "inscriptions", label: "Inscrits", icone: "inscrits", info: inscritsC.length, centre: true },
+    { id: "parcours", label: "Inscrits par cours", icone: "listes", centre: true },
+    { id: "cours", label: "Cours", icone: "cours", info: coursC.length, centre: true },
+    { id: "ordre", label: "Ordre de passage", icone: "ordre", centre: true },
+    { id: "profs", label: "Profs", icone: "profs", info: profsC.length, centre: true },
+    { id: "reglages", label: "Réglages", icone: "reglages", centre: false },
   ];
   const actif = onglets.find((o) => o.id === onglet)!;
 
@@ -153,7 +170,7 @@ export default function AdminGala() {
                   <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
                 </span>
               ) : (
-                <span className="text-base leading-none">🔒</span>
+                <Icone nom="cadenas" className="h-4 w-4" />
               )}
               <span className="text-[11px] font-bold uppercase tracking-widest opacity-90">Inscriptions</span>
             </span>
@@ -192,7 +209,7 @@ export default function AdminGala() {
                   onglet === o.id ? "bg-mk-rouge text-mk-noir" : "text-mk-gris hover:bg-mk-carte hover:text-mk-texte"
                 }`}
               >
-                <span className="w-5 text-center">{o.icone}</span>
+                <Icone nom={o.icone} className="h-[18px] w-[18px]" />
                 <span className="flex-1">{o.label}</span>
                 {o.info !== undefined && (
                   <span className={`rounded px-1.5 text-xs ${onglet === o.id ? "bg-mk-noir/15" : "bg-mk-carte2"}`}>{o.info}</span>
@@ -211,35 +228,35 @@ export default function AdminGala() {
 
       {/* ───── Contenu ───── */}
       <main className="min-w-0 flex-1">
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-mk-ligne bg-mk-fond/90 px-8 py-4 backdrop-blur">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-mk-ligne bg-mk-fond px-8">
           <h1 className="mk-titre text-2xl">
             {actif.label}
-            {actif.centre && <span className="text-mk-rouge"> · {centre.nom}</span>}
+            {actif.centre && <span className="text-mk-gris"> · {centre.nom}</span>}
           </h1>
-          <button
-            onClick={() => setOnglet("reglages")}
-            title="Ouvrir / fermer les formulaires dans Réglages"
-            className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-extrabold uppercase tracking-wide text-white ${
-              ouvert ? "bg-ok" : "bg-red-600"
-            }`}
-          >
-            {ouvert ? "● Inscriptions ouvertes" : "🔒 Inscriptions fermées"}
-          </button>
         </header>
         <div className="space-y-4 px-8 py-6">
           {erreur && <p className="mk-carte text-red-300">Erreur : {erreur}</p>}
-          {onglet === "inscriptions" && <Inscriptions inscriptions={inscritsC} cours={cours} onChange={charger} />}
+          {onglet === "inscriptions" && <Inscriptions inscriptions={inscritsC} cours={cours} coursCentre={coursC} onChange={charger} />}
           {onglet === "parcours" && (
             <ParCours key={centre.slug} inscriptions={inscriptions} inscritsCentre={inscritsC} cours={coursC} profs={profs} titre={`${titreGala} - ${centre.nom}`} />
           )}
           {onglet === "cours" && (
-            <GestionCours key={centre.slug} cours={coursC} profs={profs} inscriptions={inscriptions} lieuParDefaut={centre.nom} onChange={charger} />
+            <GestionCours key={centre.slug} cours={coursC} profs={profs} inscriptions={inscriptions} centre={centre} nbGalas={nbGalasDe(reglages, centre.slug)} onChange={chargerLeger} />
           )}
           {onglet === "ordre" && reglages && (
-            <OrdrePassage key={centre.slug} centre={centre} reglages={reglages} cours={coursC} inscriptions={inscriptions} titre={titreGala} />
+            <OngletOrdre
+              key={centre.slug}
+              centre={centre}
+              nbGalas={nbGalasDe(reglages, centre.slug)}
+              reglages={reglages}
+              cours={coursC}
+              inscriptions={inscriptions}
+              titre={titreGala}
+              onChange={chargerLeger}
+            />
           )}
-          {onglet === "profs" && <Profs profs={profsC} cours={cours} centre={centre} onChange={charger} />}
-          {onglet === "reglages" && reglages && <ReglagesGala reglages={reglages} nbInscrits={inscriptions.length} onChange={charger} />}
+          {onglet === "profs" && <Profs profs={profsC} cours={cours} centre={centre} onChange={chargerLeger} />}
+          {onglet === "reglages" && reglages && <ReglagesGala reglages={reglages} nbInscrits={inscriptions.length} onChange={chargerLeger} onReinitialise={charger} />}
         </div>
       </main>
     </div>

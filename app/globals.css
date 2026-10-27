@@ -29,25 +29,25 @@ html {
 }
 
 /* Tant que la saison n'est pas connue (toute première visite) : fond neutre,
-   ni bleu ni jaune, pour ne pas changer de couleur une fois la page chargée */
+   ni bleu ni orange, pour ne pas changer de couleur une fois la page chargée */
 html:not([data-saison]) {
   --color-mk-fond: #17181b;
   --mk-halo: #202226;
 }
 
-/* ───────── Saison « Été » : jaune pâle à la place du bleu givré ─────────
+/* ───────── Saison « Été » : orange coucher de soleil à la place du bleu givré ─────────
    Activée par le switch Hiver/Été dans Réglages (attribut data-saison sur <html>) */
 html[data-saison="ete"] {
-  --color-mk-rouge: #f6e3a1;        /* jaune pâle (couleur d'accent) */
-  --color-mk-rouge-fonce: #eed585;
-  --color-mk-noir: #15130e;
-  --color-mk-fond: #1c1913;
-  --color-mk-carte: #26221a;
-  --color-mk-carte2: #332d22;
-  --color-mk-ligne: #463e2f;
-  --color-mk-gris: #c7bea9;
-  --color-mk-texte: #fbf7ec;
-  --mk-halo: #3b311c;
+  --color-mk-rouge: #ffa45c;        /* orange (couleur d'accent) */
+  --color-mk-rouge-fonce: #ff9142;
+  --color-mk-noir: #16110d;
+  --color-mk-fond: #1d1610;
+  --color-mk-carte: #281e16;
+  --color-mk-carte2: #35281d;
+  --color-mk-ligne: #4a382a;
+  --color-mk-gris: #cbb9a8;
+  --color-mk-texte: #fdf6ef;
+  --mk-halo: #43281a;
 }
 
 /* Listes déroulantes : sous Windows, la liste ouverte reprend le fond de la case

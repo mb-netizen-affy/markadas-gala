@@ -59,8 +59,8 @@ export function imprimerCours(c: Cours, inscriptions: Inscription[], profs: Prof
   const lignes = liste
     .map((i, n) => `<tr><td>${n + 1}</td><td><b>${e(i.nom)}</b></td><td>${e(i.prenom)}</td><td>${e(i.telephone)}</td><td>${e(i.email)}</td></tr>`)
     .join("");
-  // couleur de la saison en cours (bleu l'hiver, jaune doré l'été)
-  const accent = document.documentElement.dataset.saison === "ete" ? "#d9a400" : "#2a86c2";
+  // couleur de la saison en cours (bleu l'hiver, orange l'été)
+  const accent = document.documentElement.dataset.saison === "ete" ? "#e8730c" : "#2a86c2";
   const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${e(c.nom)}</title>
 <style>
   @page { size: A4; margin: 14mm; }

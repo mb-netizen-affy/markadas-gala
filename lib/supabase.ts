@@ -26,10 +26,10 @@ export const galasDuCours = (c: Pick<Cours, "galas">, nb: number) => (c.galas ??
 // Clé de l'ordre de passage : le gala 1 garde l'ancienne clé ("bron") pour ne rien perdre
 export const cleOrdre = (slug: string, gala: number) => (gala === 1 ? slug : `${slug}-${gala}`);
 
-// Saison du gala : hiver = bleu givré, été = jaune pâle (voir globals.css)
+// Saison du gala : hiver = bleu givré, été = orange (voir globals.css)
 export type Saison = "hiver" | "ete";
 // On garde aussi la saison dans le navigateur : au prochain chargement, les bonnes couleurs
-// s'affichent tout de suite (voir le petit script dans app/layout.tsx), sans flash bleu → jaune.
+// s'affichent tout de suite (voir le petit script dans app/layout.tsx), sans flash bleu → orange.
 export function appliquerSaison(saison: string | null | undefined) {
   if (typeof document === "undefined") return;
   const s = saison === "ete" ? "ete" : "hiver";

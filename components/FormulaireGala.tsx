@@ -96,7 +96,7 @@ export default function FormulaireGala({ centre }: { centre: Centre }) {
     if (doublon && !doublonAccepte)
       return setErreur(`${champs.prenom} ${champs.nom.toUpperCase()} est déjà inscrit(e) : coche la case de confirmation si c'est bien une autre inscription.`);
     if (!coches.size) return setErreur(MESSAGES_ERREUR.AUCUN_COURS);
-    if (!accord) return setErreur("Merci d'accepter l'utilisation de vos données pour l'organisation du gala.");
+    if (!accord) return setErreur("Merci d'accepter l'utilisation de vos données et le droit à l'image pour valider l'inscription.");
     setEnvoi(true);
     const { error } = await supabase.rpc("gala_inscrire", {
       p_nom: champs.nom,
@@ -194,7 +194,7 @@ export default function FormulaireGala({ centre }: { centre: Centre }) {
               <section className="mk-carte order-1 space-y-3 lg:order-none">
                 <h2 className="mk-titre text-lg">Le danseur</h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  {champ("nom", "Nom", "text", "family-name")}
+                  {champ("nom", "Nom de famille", "text", "family-name")}
                   {champ("prenom", "Prénom", "text", "given-name")}
                   {champ("email", "Email", "email", "email")}
                   {champ("telephone", "Téléphone", "tel", "tel")}
@@ -237,9 +237,11 @@ export default function FormulaireGala({ centre }: { centre: Centre }) {
 
                 <label className="flex items-start gap-3 text-sm text-mk-gris">
                   <input type="checkbox" checked={accord} onChange={(e) => setAccord(e.target.checked)} className="mt-1 h-4 w-4 shrink-0" />
-                  <span>
-                    J&apos;accepte que ces informations soient utilisées par les écoles Markadas uniquement pour
-                    l&apos;organisation du gala.
+                  <span className="space-y-1.5">
+                       <span className="block">
+                       J&apos;autorise les écoles Markadas à photographier
+                       et filmer le danseur pendant le gala, et à utiliser ces images pour leur communication 
+                    </span>
                   </span>
                 </label>
 
@@ -291,8 +293,7 @@ export default function FormulaireGala({ centre }: { centre: Centre }) {
                 </p>
               )}
               <div
-                className="grid gap-3 lg:[grid-template-columns:repeat(var(--nb-jours),minmax(0,1fr))]"
-                style={{ "--nb-jours": parJour.length } as React.CSSProperties}
+                className="grid gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(175px,1fr))]"
               >
                 {parJour.map((g) => (
                   <div key={g.jour} className="space-y-2">
@@ -320,7 +321,7 @@ export default function FormulaireGala({ centre }: { centre: Centre }) {
                             </span>
                             <span className="min-w-0">
                               {c.horaire && <span className="block text-xs font-bold text-mk-gris">{c.horaire}</span>}
-                              <span className="block text-sm font-bold leading-snug">{c.nom}</span>
+                              <span className="block text-sm font-bold leading-snug [overflow-wrap:anywhere]">{c.nom}</span>
                               {c.prof_id && profs.get(c.prof_id) && (
                                 <span className="block text-xs text-mk-gris">avec {profs.get(c.prof_id)}</span>
                               )}

@@ -212,3 +212,15 @@ export function deplacerVers(liste: Ligne[], depuis: number, vers: number, estFi
   places.forEach((i, k) => (res[i] = mobiles[k]));
   return res;
 }
+
+// Glisser-déposer « à l'insertion » : la ligne déplacée vient se placer JUSTE AVANT la ligne visée
+// (juste après l'intro si on vise l'intro). Une ligne peut ainsi changer de partie, même si la
+// partie ne contient que la Team Show. La Team Show et l'entracte ne bougent jamais.
+export function insererAvant(liste: Ligne[], depuis: number, avant: number): Ligne[] {
+  const cible = Math.max(1, avant); // jamais devant l'intro
+  if (cible === depuis || cible === depuis + 1) return liste;
+  const res = [...liste];
+  const [ligne] = res.splice(depuis, 1);
+  res.splice(cible > depuis ? cible - 1 : cible, 0, ligne);
+  return res;
+}

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase, cleOrdre, galasDuCours, type Centre, type Cours, type Inscription, type Reglages } from "@/lib/supabase";
 import {
-  ECART_DEFAUT, ajouterALaFin, conflits, danseursParCours, deplacerVers, estTeamShow, generer, reinsererLibres,
+  ECART_DEFAUT, ajouterALaFin, conflits, danseursParCours, estTeamShow, generer, insererAvant, reinsererLibres,
   type Ligne, type OrdrePassage as Ordre,
 } from "@/lib/ordre";
 import Icone from "@/components/Icone";
@@ -100,7 +100,10 @@ export default function OrdrePassage({
   // ▲ / ▼ : échange avec la danse précédente / suivante (la Team Show et l'entracte restent fixes)
   const fixe = (l: Ligne) => l.t === "entracte" || (l.t === "danse" && l.id === ordre.teamShow);
   function deposer(vers: number) {
-    if (glisse !== null && glisse !== vers) sauver({ ...ordre, liste: deplacerVers(liste, glisse, vers, fixe) });
+    if (glisse !== null) {
+      const nouvelle = insererAvant(liste, glisse, vers);
+      if (nouvelle !== liste) sauver({ ...ordre, liste: nouvelle });
+    }
     setGlisse(null);
     setSurvol(null);
   }
@@ -245,7 +248,6 @@ export default function OrdrePassage({
         </p>
       ) : (
         <>
-        <p className="text-xs text-mk-gris">Astuce : attrape une ligne pour la glisser à sa nouvelle place (la Team Show et l&apos;entracte restent fixes).</p>
         <div className="grid grid-cols-2 items-start gap-4">
         {parties.map((p, iPartie) => (
           <div key={iPartie} className="overflow-hidden rounded-lg border border-mk-ligne">
@@ -269,7 +271,9 @@ export default function OrdrePassage({
                   const ts = l.t === "danse" && l.id === ordre.teamShow;
                   const libre = l.t === "libre";
                   const alertes = conflitsDe(idx);
-                  const cible = survol === idx && glisse !== null && glisse !== idx && !ts;
+                  // Ligne d'insertion : au-dessus de la ligne visée (en dessous si c'est l'intro)
+                  const cible = survol === idx && glisse !== null && glisse !== idx;
+                  const traitDessous = cible && idx === 0;
                   return (
                     <tr
                       key={`${l.t === "entracte" ? "e" : l.id}-${idx}`}
@@ -283,7 +287,7 @@ export default function OrdrePassage({
                         setSurvol(null);
                       }}
                       onDragOver={(e) => {
-                        if (ts || glisse === null) return;
+                        if (glisse === null) return;
                         e.preventDefault();
                         setSurvol(idx);
                       }}
@@ -293,7 +297,7 @@ export default function OrdrePassage({
                       }}
                       className={`border-b border-mk-ligne/60 transition last:border-0 even:bg-mk-carte2/30 ${
                         alertes.length ? "bg-amber-500/10" : ""
-                      } ${glisse === idx ? "opacity-40" : ""} ${cible ? "outline outline-2 -outline-offset-2 outline-mk-rouge" : ""} ${
+                      } ${glisse === idx ? "opacity-40" : ""} ${cible ? (traitDessous ? "shadow-[inset_0_-3px_0_var(--color-mk-rouge)]" : "shadow-[inset_0_3px_0_var(--color-mk-rouge)]") : ""} ${
                         ts ? "" : "cursor-grab active:cursor-grabbing"
                       }`}
                     >

@@ -13,8 +13,9 @@ import Profs from "@/components/admin/Profs";
 import Inscriptions from "@/components/admin/Inscriptions";
 import ParCours from "@/components/admin/ParCours";
 import OngletOrdre from "@/components/admin/OngletOrdre";
+import VueEnsemble from "@/components/admin/VueEnsemble";
 
-type Onglet = "inscriptions" | "parcours" | "cours" | "ordre" | "profs" | "reglages";
+type Onglet = "ensemble" | "inscriptions" | "parcours" | "cours" | "ordre" | "profs" | "reglages";
 
 // Supabase renvoie 1000 lignes maximum par requête : on charge par paquets
 async function chargerInscriptions(): Promise<Inscription[]> {
@@ -53,6 +54,7 @@ export default function AdminGala() {
   }, []);
   function choisirCentre(slug: string) {
     setSlugCentre(slug);
+    setOnglet((o) => (o === "ensemble" ? "inscriptions" : o));
     try {
       localStorage.setItem("mk-centre", slug);
     } catch {}
@@ -140,7 +142,7 @@ export default function AdminGala() {
     { id: "profs", label: "Profs", icone: "profs", info: profsC.length, centre: true },
     { id: "reglages", label: "Réglages", icone: "reglages", centre: false },
   ];
-  const actif = onglets.find((o) => o.id === onglet)!;
+  const actif = onglet === "ensemble" ? { id: "ensemble", label: "Vue d'ensemble", centre: false } : onglets.find((o) => o.id === onglet)!;
 
   return (
     <div className="flex min-h-screen">
@@ -188,13 +190,22 @@ export default function AdminGala() {
                 key={c.slug}
                 onClick={() => choisirCentre(c.slug)}
                 className={`rounded-md py-1.5 text-xs font-extrabold uppercase tracking-wide transition ${
-                  c.slug === centre.slug ? "bg-mk-rouge text-mk-noir" : "text-mk-gris hover:text-mk-texte"
+                  c.slug === centre.slug && onglet !== "ensemble" ? "bg-mk-rouge text-mk-noir" : "text-mk-gris hover:text-mk-texte"
                 }`}
               >
                 {c.nom}
               </button>
             ))}
           </div>
+          {/* Les deux écoles sur une seule page */}
+          <button
+            onClick={() => setOnglet("ensemble")}
+            className={`mt-1 flex w-full items-center justify-center gap-2 rounded-lg border py-1.5 text-xs font-extrabold uppercase tracking-wide transition ${
+              onglet === "ensemble" ? "border-mk-rouge bg-mk-rouge text-mk-noir" : "border-mk-ligne text-mk-gris hover:text-mk-texte"
+            }`}
+          >
+            <Icone nom="listes" className="h-3.5 w-3.5" /> Vue d&apos;ensemble
+          </button>
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
@@ -236,6 +247,18 @@ export default function AdminGala() {
         </header>
         <div className="space-y-4 px-8 py-6">
           {erreur && <p className="mk-carte text-red-300">Erreur : {erreur}</p>}
+          {onglet === "ensemble" && reglages && (
+            <VueEnsemble
+              reglages={reglages}
+              cours={cours}
+              profs={profs}
+              inscriptions={inscriptions}
+              onAller={(slug, o) => {
+                choisirCentre(slug);
+                setOnglet(o);
+              }}
+            />
+          )}
           {onglet === "inscriptions" && <Inscriptions inscriptions={inscritsC} cours={cours} coursCentre={coursC} onChange={charger} />}
           {onglet === "parcours" && (
             <ParCours key={centre.slug} inscriptions={inscriptions} inscritsCentre={inscritsC} cours={coursC} profs={profs} titre={`${titreGala} - ${centre.nom}`} />

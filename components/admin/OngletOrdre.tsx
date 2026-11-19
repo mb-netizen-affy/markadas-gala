@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { galasDuCours, type Centre, type Cours, type Inscription, type Reglages } from "@/lib/supabase";
 import { estTeamShow } from "@/lib/ordre";
-import NbGalas from "@/components/admin/NbGalas";
 import OrdrePassage from "@/components/admin/OrdrePassage";
 import Icone from "@/components/Icone";
 
-// Onglet « Ordre de passage » d'une école : nombre de galas, choix du gala, puis son déroulé
+// Onglet « Ordre de passage » d'une école : choix du gala, puis son déroulé.
+// Le NOMBRE de galas se règle uniquement dans l'onglet Cours.
 export default function OngletOrdre({
-  centre, nbGalas, reglages, cours, inscriptions, titre, onChange,
+  centre, nbGalas, reglages, cours, inscriptions, titre,
 }: {
   centre: Centre;
   nbGalas: number;
@@ -17,7 +17,7 @@ export default function OngletOrdre({
   cours: Cours[];
   inscriptions: Inscription[];
   titre: string;
-  onChange: () => void;
+  onChange?: () => void; // plus utilisé ici (gardé pour ne pas changer app/page.tsx)
 }) {
   const [gala, setGala] = useState(1);
   const g = Math.min(gala, nbGalas);
@@ -25,9 +25,8 @@ export default function OngletOrdre({
 
   return (
     <div className="space-y-4">
-      <div className="mk-carte flex flex-wrap items-center gap-x-6 gap-y-3">
-        <NbGalas centre={centre} nb={nbGalas} onChange={onChange} />
-        {nbGalas > 1 && (
+      {nbGalas > 1 && (
+        <div className="mk-carte flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex gap-1 rounded-lg bg-mk-noir p-1">
             {Array.from({ length: nbGalas }, (_, i) => i + 1).map((n) => (
               <button
@@ -44,13 +43,14 @@ export default function OngletOrdre({
               </button>
             ))}
           </div>
-        )}
-        {nbGalas > 1 && sansGala > 0 && (
-          <p className="flex items-center gap-2 text-sm font-bold text-amber-300">
-            <Icone nom="alerte" /> {sansGala} cours sans gala : ils n&apos;apparaissent dans aucun déroulé (à régler dans l&apos;onglet Cours).
-          </p>
-        )}
-      </div>
+          {sansGala > 0 && (
+            <p className="flex items-center gap-2 text-sm font-bold text-amber-300">
+              <Icone nom="alerte" /> {sansGala} cours sans gala : ils n&apos;apparaissent dans aucun déroulé (à régler dans l&apos;onglet Cours).
+            </p>
+          )}
+          <p className="ml-auto text-xs text-mk-gris">Le nombre de galas se règle dans l&apos;onglet Cours.</p>
+        </div>
+      )}
 
       <OrdrePassage
         key={`${centre.slug}-${g}-${nbGalas}`}
